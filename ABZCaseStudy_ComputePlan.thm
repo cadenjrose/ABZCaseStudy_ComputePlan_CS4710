@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<alloy>
+
+<view>
+
+<defaultnode/>
+
+<defaultedge/>
+
+<node>
+   <type name="c0"/>
+   <type name="c1"/>
+   <type name="c10"/>
+   <type name="c2"/>
+   <type name="c3"/>
+   <type name="c4"/>
+   <type name="c5"/>
+   <type name="c6"/>
+   <type name="c7"/>
+   <type name="c8"/>
+   <type name="c9"/>
+   <type name="Charger"/>
+   <type name="Goal"/>
+   <type name="Int"/>
+   <type name="MapObject"/>
+   <type name="Obstacle"/>
+   <type name="Path"/>
+   <type name="Position"/>
+   <type name="Rover"/>
+   <type name="String"/>
+   <type name="univ"/>
+   <type name="x0"/>
+   <type name="x1"/>
+   <type name="x2"/>
+   <type name="x3"/>
+   <type name="y0"/>
+   <type name="y1"/>
+   <type name="y2"/>
+   <type name="y3"/>
+   <type name="open$3/Ord"/>
+   <type name="open$4/Ord"/>
+   <type name="ordering/Ord"/>
+   <type name="seq/Int"/>
+   <set name="$InitRover_pos" type="Position"/>
+   <set name="$InitRover_r" type="Rover"/>
+</node>
+
+<node hideunconnected="yes">
+   <type name="ChargeLevel"/>
+   <type name="XCoord"/>
+   <type name="YCoord"/>
+</node>
+
+</view>
+
+</alloy>
