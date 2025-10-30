@@ -60,7 +60,9 @@ sig Rover {
 sig Map {
 	obstacles: set Obstacle,	// The set of obstacles
 	chargers: set Charger,	// The set of chargers
-	goals: set Goal		// The set of goals
+	goals: set Goal,		// The set of goals
+	topEdge: one YCoord,   // The maximum traversable y value
+	rightEdge: one XCoord   // The maximum traversable x value
 }
 one sig ActiveMap extends Map {} // The Map the Rover is activly traversing
 
@@ -84,16 +86,11 @@ fact {
 	// There are never any extra map objects other than the ones defined by each map
 	always no m: MapObject | m not in ActiveMap.(obstacles + goals + chargers)
 
-	// The map never dynamically changes
-	always StaticMap 
-
 	// The active map is the only map
 	always Map = ActiveMap
 
 	// One step is always taken
 	always oneStep
-
-	always #Rover = 1
 }
 
 
@@ -108,6 +105,9 @@ pred InitRover {
 		r.currentPos = pos
 		r.charge = c10
 	}
+
+	// There is only ever 1 rover
+	always #Rover = 1
 }
 
 /* Is the path structure valid? */
@@ -131,7 +131,10 @@ pred ValidPathStructure[p: Path] {
 
 /* Does an operation get taken? */
 pred oneStep {
-	lowerCharge or
+	TraverseUp or
+	TraverseRight or
+	TraverseDown or
+	TraverseLeft or
 	always doNothing
 }
 
@@ -142,21 +145,7 @@ pred doNothing {
 	currentPath' = currentPath
 }
 
-/* Does the Map stay dynamically unchanged? */
-pred StaticMap {
-	Obstacle' = Obstacle
-	obstacles' = obstacles
-	Charger' = Charger
-	chargers' = chargers
-	Goal' = Goal
-	goals' = goals
-	location' = location
-	Position' = Position
-	Map' = Map
-}
-
 /* Does Rover r lower its charge at this time? */
-pred lowerCharge {some r: Rover | lowerCharge[r]}
 pred lowerCharge[r: Rover] {
 	// Pre-conditions
 	r.charge != c0 // r must have some charge
@@ -184,6 +173,10 @@ pred lowerCharge[r: Rover] {
  */
 pred SelectMapOne {some o1: Obstacle, o2: Obstacle - o1,  g: Goal, c: Charger | SelectMapOne[o1, o2, g, c]}
 pred SelectMapOne[o1: Obstacle, o2: Obstacle, g: Goal, c: Charger] {
+	// Set Map Boundary
+	ActiveMap.rightEdge = x2
+	ActiveMap.topEdge = y2
+
 	// Obstacles
 	o1.x = x1 and o1.y = y1
 	o2.x = x1 and o2.y = y0
@@ -219,6 +212,10 @@ pred SelectMapOne[o1: Obstacle, o2: Obstacle, g: Goal, c: Charger] {
  */
 pred SelectMapTwo {some o1: Obstacle, o2: Obstacle - o1, o3: Obstacle - (o1+o2), g1: Goal, g2: Goal - g1, c: Charger | SelectMapTwo[o1, o2, o3, g1, g2, c]}
 pred SelectMapTwo [o1: Obstacle, o2: Obstacle, o3: Obstacle, g1: Goal, g2: Goal, c: Charger] {
+	// Set Map Boundary
+	ActiveMap.rightEdge = x4
+	ActiveMap.topEdge = y4
+
 	// Obstacles
 	o1.x = x3 and o1.y = y3
 	o2.x = x3 and o2.y = y4
@@ -235,6 +232,58 @@ pred SelectMapTwo [o1: Obstacle, o2: Obstacle, o3: Obstacle, g1: Goal, g2: Goal,
 	ActiveMap.chargers = c
 }
 
+
+pred TraverseUp {some r: Rover | TraverseUp[r] }
+pred TraverseUp [r: Rover] {
+	// Pre-conditions
+	r.currentPos.y in prevs[prev[ActiveMap.topEdge]] // r's current position is < maximum traversable y value
+	
+	// Post-conditions (changed)
+	currentPos'.y = r->next[r.currentPos.y]
+	lowerCharge[r]
+
+	// Post-conditions (un-changed)
+	currentPath' = currentPath
+}
+
+pred TraverseRight {some r: Rover | TraverseRight[r] }
+pred TraverseRight [r: Rover] {
+	// Pre-conditions
+	r.currentPos.x in prevs[prev[ActiveMap.rightEdge]] // r's current position is < maximum traversable x value
+	
+	// Post-conditions (changed)
+	currentPos'.x= r->next[r.currentPos.x]
+	lowerCharge[r]
+
+	// Post-conditions (un-changed)
+	currentPath' = currentPath
+}
+
+pred TraverseDown {some r: Rover | TraverseDown[r] }
+pred TraverseDown [r: Rover] {
+	// Pre-conditions
+	r.currentPos.y != y0 // r's current position is > minimum traversable y value
+	
+	// Post-conditions (changed)
+	currentPos'.y = r->prev[r.currentPos.y]
+	lowerCharge[r]
+
+	// Post-conditions (un-changed)
+	currentPath' = currentPath
+}
+
+pred TraverseLeft {some r: Rover | TraverseLeft[r] }
+pred TraverseLeft [r: Rover] {
+	// Pre-conditions
+	r.currentPos.x != x0 // r's current position is > minimum traversable y value
+	
+	// Post-conditions (changed)
+	currentPos'.x = r->prev[r.currentPos.x]
+	lowerCharge[r]
+
+	// Post-conditions (un-changed)
+	currentPath' = currentPath
+}
 
 pred ComputePlan [r: Rover] {
 	// Compute the path
