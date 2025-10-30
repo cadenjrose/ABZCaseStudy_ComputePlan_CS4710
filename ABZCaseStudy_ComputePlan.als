@@ -51,10 +51,18 @@ sig Path {
 
 // The current state of the Rover
 sig Rover {
-	currentPos: one Position,	// The current x,y position
-	charge: one ChargeLevel,	// The current charge
-	currentPath: one Path		// The current path
+	var currentPos: one Position,		// The current x,y position
+	var charge: one ChargeLevel,	// The current charge
+	var currentPath: one Path		// The current path
 }
+
+// A map object the rover can traverse
+sig Map {
+	obstacles: set Obstacle,	// The set of obstacles
+	chargers: set Charger,	// The set of chargers
+	goals: set Goal		// The set of goals
+}
+one sig ActiveMap extends Map {} // The Map the Rover is activly traversing
 
 
 // ----------------- Facts  ------------------//
@@ -65,16 +73,27 @@ fact {
 	InitRover 
 
 	// Select the Map
-	MapTwo
+	SelectMapOne
 
 	// Initialze the currentPath to only be the starting position
 	Rover.currentPath.positions = Path.start
 
 	 // Every path has a valid structure
-	always ValidPathStructure[Path]
+	always ValidPathStructure
 
-	// The map never changes
+	// There are never any extra map objects other than the ones defined by each map
+	always no m: MapObject | m not in ActiveMap.(obstacles + goals + chargers)
+
+	// The map never dynamically changes
 	always StaticMap 
+
+	// The active map is the only map
+	always Map = ActiveMap
+
+	// One step is always taken
+	always oneStep
+
+	always #Rover = 1
 }
 
 
@@ -92,8 +111,9 @@ pred InitRover {
 }
 
 /* Is the path structure valid? */
+pred ValidPathStructure {all p: Path | ValidPathStructure[p]}
 pred ValidPathStructure[p: Path] {
-	// The start point ahs no previous positon
+	// The start point has no previous positon
 	no p.start.~(p.nextPos)
 
 	// The end point has no next position
@@ -104,13 +124,45 @@ pred ValidPathStructure[p: Path] {
 
 	// All positions are reachable from the starting position
 	p.positions = p.start.*(p.nextPos)
+
+	// There are never any obstacles inside of a Rover's current path
+	no (ActiveMap.obstacles.location & Rover.currentPath.positions)
 }
 
-/* Does the Map stay unchanged? */
+/* Does an operation get taken? */
+pred oneStep {
+	lowerCharge or
+	always doNothing
+}
+
+/* Do we do nothing? */
+pred doNothing {
+	currentPos' = currentPos
+	charge' = charge
+	currentPath' = currentPath
+}
+
+/* Does the Map stay dynamically unchanged? */
 pred StaticMap {
 	Obstacle' = Obstacle
+	obstacles' = obstacles
 	Charger' = Charger
+	chargers' = chargers
 	Goal' = Goal
+	goals' = goals
+	location' = location
+	Position' = Position
+	Map' = Map
+}
+
+/* Does Rover r lower its charge at this time? */
+pred lowerCharge {some r: Rover | lowerCharge[r]}
+pred lowerCharge[r: Rover] {
+	// Pre-conditions
+	r.charge != c0 // r must have some charge
+
+	// Post-conditions
+	r.charge' = prev[r.charge]
 }
 
 
@@ -130,17 +182,20 @@ pred StaticMap {
 	y0  Start	   Obstacle
 		x0		x1		x2
  */
-pred MapOne {some o1: Obstacle, o2: Obstacle - o1,  g: Goal, c: Charger | MapOne[o, g, c]}
-pred MapOne[o1: Obstacle, o2: Obstacle, g: Goal, c: Charger] {
+pred SelectMapOne {some o1: Obstacle, o2: Obstacle - o1,  g: Goal, c: Charger | SelectMapOne[o1, o2, g, c]}
+pred SelectMapOne[o1: Obstacle, o2: Obstacle, g: Goal, c: Charger] {
 	// Obstacles
 	o1.x = x1 and o1.y = y1
 	o2.x = x1 and o2.y = y0
+	ActiveMap.obstacles = o1 + o2
 
 	// Goals
 	g.x = x2 and g.y = y2
+	ActiveMap.goals = g
 
 	// Chargers
 	c.x = x0 and c.y = y2
+	ActiveMap.chargers = c
 }
 
 /* 
@@ -162,23 +217,28 @@ pred MapOne[o1: Obstacle, o2: Obstacle, g: Goal, c: Charger] {
 	y0  Start	   
 		x0		x1		x2		x3		x4
  */
-pred MapTwo {some o1: Obstacle, o2: Obstacle - o1, o3: Obstacle - (o1+o2), g1: Goal, g2: Goal - g1, c: Charger | MapTwo[o1, o2, o3, g1, g2, c]}
-pred MapTwo [o1: Obstacle, o2: Obstacle, o3: Obstacle, g1: Goal, g2: Goal, c: Charger] {
+pred SelectMapTwo {some o1: Obstacle, o2: Obstacle - o1, o3: Obstacle - (o1+o2), g1: Goal, g2: Goal - g1, c: Charger | SelectMapTwo[o1, o2, o3, g1, g2, c]}
+pred SelectMapTwo [o1: Obstacle, o2: Obstacle, o3: Obstacle, g1: Goal, g2: Goal, c: Charger] {
 	// Obstacles
 	o1.x = x3 and o1.y = y3
 	o2.x = x3 and o2.y = y4
 	o3.x = x1 and o3.y = y3
+	ActiveMap.obstacles = o1 + o2 + o3
 	
 	// Goals
 	g1.x = x0 and g1.y = y4
 	g2.x = x4 and g2.y = y4
+	ActiveMap.goals = g1 + g2
 
 	// Chargers
 	c.x = x2 and c.y = y2
-
-	no m: MapObject | m != o1 and m != o2 and m != o3 and m != g1 and m != g2 and m != c
+	ActiveMap.chargers = c
 }
 
+
+pred ComputePlan [r: Rover] {
+	// Compute the path
+}
 
 // -------------- Functions --------------//
 
@@ -195,6 +255,6 @@ fun y[m: MapObject]: one YCoord {
 }
 
 pred show {}
-run show for 10
+run show for 8
 
 
