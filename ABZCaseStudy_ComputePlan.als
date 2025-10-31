@@ -19,7 +19,7 @@ open util/ordering[ChargeLevel] // orders the charge levels
 
 // pseudo integers
 enum XCoord {x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10} // can expand later
-enum YCoord {y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10} // can expand later 
+enum YCoord {y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10}         // can expand later 
 enum ChargeLevel {c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10} // can expand later
 
 
@@ -38,7 +38,7 @@ sig MapObject {
 }
 
 sig Goal extends MapObject {}		// The Goal Objects
-sig Charger extends MapObject {}	// The Charger Objects
+sig Charger extends MapObject {}  	// The Charger Objects
 sig Obstacle extends MapObject {}       // The Obstacle Objects
 
 // The calculated Path to reach all Goals without running out of Charge
@@ -71,12 +71,6 @@ one sig ActiveMap extends Map {} // The Map the Rover is activly traversing
 
 
 fact {
-	// Initialize the rover
-	InitRover 
-
-	// Select the Map
-	SelectMapTwo
-
 	 // Every path has a valid structure
 	always ValidPathStructure
 
@@ -98,16 +92,12 @@ pred InitRover {
 		pos.y = y0
 		r.currentPos = pos
 		r.charge = c10
+		r.currentPath.start = pos
+		r.currentPath.end = pos
 	}
-
-	// Initialze the currentPath to only be the starting position
-	//Rover.currentPath.positions = Path.start
 
 	// There is only ever 1 rover
 	always #Rover = 1
-
-	// The rover never goes into an obstacle
-	always no Rover.currentPos & ActiveMap.obstacles.location
 }
 
 /* Is the path structure valid? */
@@ -121,6 +111,9 @@ pred ValidPathStructure[p: Path] {
 
 	// All positions that are not the end position have one next position
 	all pos: (p.positions - p.end) | one pos.(p.nextPos)
+
+	// All positions that are not the start position have a prev position
+	all pos: (p.positions - p.start) | one pos.~(p.nextPos)
 
 	// All positions are reachable from the starting position
 	p.positions = p.start.*(p.nextPos)
@@ -291,10 +284,10 @@ pred TraverseCurrentPath [r: Rover] {
 }
 
 /* Updates Rover r's current path to the shortest path to reach all of its goals without running out of charge */
+pred ComputePlan {some r: Rover | ComputePlan[r]}
 pred ComputePlan [r: Rover] {
 	
 }
-
 
 
 // -------------- Functions --------------//
@@ -311,7 +304,16 @@ fun y[m: MapObject]: one YCoord {
 	m.location.y
 }
 
-pred show {eventually some r: Rover | r.currentPos.x = x0 and r.currentPos.y = y4}
-run show for 8
+pred show {
+	// Step 1: Initialize Rover and the Map
+		InitRover and SelectMapTwo and
+
+	// Step 2: Calcuate Current Path
+		after (eventually (ComputePlan and
+
+	// Step 3: Traverse Current Path
+		after (eventually TraverseCurrentPath)))
+}
+run show for 3
 
 
