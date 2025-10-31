@@ -8,6 +8,7 @@
 <defaultedge/>
 
 <node>
+   <type name="ActiveMap"/>
    <type name="c0"/>
    <type name="c1"/>
    <type name="c10"/>
@@ -22,6 +23,7 @@
    <type name="Charger"/>
    <type name="Goal"/>
    <type name="Int"/>
+   <type name="Map"/>
    <type name="MapObject"/>
    <type name="Obstacle"/>
    <type name="Path"/>
@@ -31,18 +33,39 @@
    <type name="univ"/>
    <type name="x0"/>
    <type name="x1"/>
+   <type name="x10"/>
    <type name="x2"/>
    <type name="x3"/>
+   <type name="x4"/>
+   <type name="x5"/>
+   <type name="x6"/>
+   <type name="x7"/>
+   <type name="x8"/>
+   <type name="x9"/>
    <type name="y0"/>
    <type name="y1"/>
+   <type name="y10"/>
    <type name="y2"/>
    <type name="y3"/>
+   <type name="y4"/>
+   <type name="y5"/>
+   <type name="y6"/>
+   <type name="y7"/>
+   <type name="y8"/>
+   <type name="y9"/>
    <type name="open$3/Ord"/>
    <type name="open$4/Ord"/>
    <type name="ordering/Ord"/>
    <type name="seq/Int"/>
    <set name="$InitRover_pos" type="Position"/>
    <set name="$InitRover_r" type="Rover"/>
+   <set name="$SelectMapTwo_c" type="Charger"/>
+   <set name="$SelectMapTwo_g1" type="Goal"/>
+   <set name="$SelectMapTwo_g2" type="Goal"/>
+   <set name="$SelectMapTwo_o1" type="Obstacle"/>
+   <set name="$SelectMapTwo_o2" type="Obstacle"/>
+   <set name="$SelectMapTwo_o3" type="Obstacle"/>
+   <set name="$show_r" type="Rover"/>
 </node>
 
 <node hideunconnected="yes">
@@ -50,6 +73,12 @@
    <type name="XCoord"/>
    <type name="YCoord"/>
 </node>
+
+<edge visible="no">
+   <relation name="positions"> <type name="Path"/> <type name="Position"/> </relation>
+   <relation name="rightEdge"> <type name="Map"/> <type name="XCoord"/> </relation>
+   <relation name="topEdge"> <type name="Map"/> <type name="YCoord"/> </relation>
+</edge>
 
 </view>
 

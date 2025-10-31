@@ -75,10 +75,7 @@ fact {
 	InitRover 
 
 	// Select the Map
-	SelectMapOne
-
-	// Initialze the currentPath to only be the starting position
-	Rover.currentPath.positions = Path.start
+	SelectMapTwo
 
 	 // Every path has a valid structure
 	always ValidPathStructure
@@ -88,9 +85,6 @@ fact {
 
 	// The active map is the only map
 	always Map = ActiveMap
-
-	// One step is always taken
-	always oneStep
 }
 
 
@@ -106,8 +100,14 @@ pred InitRover {
 		r.charge = c10
 	}
 
+	// Initialze the currentPath to only be the starting position
+	//Rover.currentPath.positions = Path.start
+
 	// There is only ever 1 rover
 	always #Rover = 1
+
+	// The rover never goes into an obstacle
+	always no Rover.currentPos & ActiveMap.obstacles.location
 }
 
 /* Is the path structure valid? */
@@ -127,22 +127,9 @@ pred ValidPathStructure[p: Path] {
 
 	// There are never any obstacles inside of a Rover's current path
 	no (ActiveMap.obstacles.location & Rover.currentPath.positions)
-}
 
-/* Does an operation get taken? */
-pred oneStep {
-	TraverseUp or
-	TraverseRight or
-	TraverseDown or
-	TraverseLeft or
-	always doNothing
-}
-
-/* Do we do nothing? */
-pred doNothing {
-	currentPos' = currentPos
-	charge' = charge
-	currentPath' = currentPath
+	// There is only ever one path, the current path
+	Path = Rover.currentPath
 }
 
 /* Does Rover r lower its charge at this time? */
@@ -232,6 +219,9 @@ pred SelectMapTwo [o1: Obstacle, o2: Obstacle, o3: Obstacle, g1: Goal, g2: Goal,
 	ActiveMap.chargers = c
 }
 
+/*
+
+// ------- Single Step Traversals ------//
 
 pred TraverseUp {some r: Rover | TraverseUp[r] }
 pred TraverseUp [r: Rover] {
@@ -239,10 +229,11 @@ pred TraverseUp [r: Rover] {
 	r.currentPos.y in prevs[prev[ActiveMap.topEdge]] // r's current position is < maximum traversable y value
 	
 	// Post-conditions (changed)
-	currentPos'.y = r->next[r.currentPos.y]
+	r.currentPos'.y = next[r.currentPos.y]
 	lowerCharge[r]
 
 	// Post-conditions (un-changed)
+	r.currentPos'.x = r.currentPos.x
 	currentPath' = currentPath
 }
 
@@ -252,10 +243,11 @@ pred TraverseRight [r: Rover] {
 	r.currentPos.x in prevs[prev[ActiveMap.rightEdge]] // r's current position is < maximum traversable x value
 	
 	// Post-conditions (changed)
-	currentPos'.x= r->next[r.currentPos.x]
+	r.currentPos'.x= next[r.currentPos.x]
 	lowerCharge[r]
 
 	// Post-conditions (un-changed)
+	r.currentPos'.y = r.currentPos.y
 	currentPath' = currentPath
 }
 
@@ -265,10 +257,11 @@ pred TraverseDown [r: Rover] {
 	r.currentPos.y != y0 // r's current position is > minimum traversable y value
 	
 	// Post-conditions (changed)
-	currentPos'.y = r->prev[r.currentPos.y]
+	r.currentPos'.y = prev[r.currentPos.y]
 	lowerCharge[r]
 
 	// Post-conditions (un-changed)
+	r.currentPos'.x = r.currentPos.x
 	currentPath' = currentPath
 }
 
@@ -278,16 +271,31 @@ pred TraverseLeft [r: Rover] {
 	r.currentPos.x != x0 // r's current position is > minimum traversable y value
 	
 	// Post-conditions (changed)
-	currentPos'.x = r->prev[r.currentPos.x]
+	r.currentPos'.x = prev[r.currentPos.x]
 	lowerCharge[r]
 
 	// Post-conditions (un-changed)
+	r.currentPos'.y = r.currentPos.y
 	currentPath' = currentPath
 }
+*/
 
-pred ComputePlan [r: Rover] {
-	// Compute the path
+/* Traverses Rover r along is current path */
+pred TraverseCurrentPath {some r: Rover | TraverseCurrentPath[r]}
+pred TraverseCurrentPath [r: Rover] {
+	// Pre-conditions
+	r.currentPos = r.currentPath.start // r must be at the start of the path
+	r.currentPath.start != r.currentPath.end // the path must be require at least one step
+
+	
 }
+
+/* Updates Rover r's current path to the shortest path to reach all of its goals without running out of charge */
+pred ComputePlan [r: Rover] {
+	
+}
+
+
 
 // -------------- Functions --------------//
 
@@ -303,7 +311,7 @@ fun y[m: MapObject]: one YCoord {
 	m.location.y
 }
 
-pred show {}
+pred show {eventually some r: Rover | r.currentPos.x = x0 and r.currentPos.y = y4}
 run show for 8
 
 
