@@ -81,7 +81,7 @@ fact {
 	always no m: MapObject | m not in ActiveMap.(obstacles + goals + chargers)
 
 	// The active map is the only map
-	always Map = ActiveMap
+	Map = ActiveMap
 }
 
 
@@ -90,14 +90,11 @@ fact {
 /* Initializes the Rover */
 pred InitRover {
 	// Rover starts at position (x0, y0) with charge c10
-	some r: Rover, pos: Position | {
-		pos.x = x0
-		pos.y = y0
-		r.currentPos = pos
+	some r: Rover | {
+		r.currentPos.x = x0
+		r.currentPos.y = y0
 		r.charge = c10
-		r.currentPath.start = pos // current path starts at x0, y0
-		//r.currentPath.end = pos // current path ends at x0, y0
-		//r.currentPath.end = {p: Position | p.x = x4 and p.y = y4}
+		r.currentPath.start = r.currentPos // current path starts at x0, y0
 	}
 
 	// There is only ever 1 rover
@@ -122,7 +119,7 @@ pred ValidPathStructure[p: Path] {
 	// All positions are reachable from the starting position
 	p.positions = p.start.*(p.nextPos)
 
-	// All next positions must be adjacent to their previous position
+	// All next positions must be adjacent
 	adj[p.nextPos]
 
 	// The path never goes out of bounds
@@ -137,16 +134,6 @@ pred ValidPathStructure[p: Path] {
 	// Every goal must be in the path
 	ActiveMap.goals.location in p.positions
 }
-
-/* Does Rover r lower its charge at this time? */
-pred lowerCharge[r: Rover] {
-	// Pre-conditions
-	r.charge != c0 // r must have some charge
-
-	// Post-conditions
-	r.charge' = prev[r.charge]
-}
-
 
 // ------------------ Maps -----------------//
 
@@ -188,7 +175,7 @@ pred SelectMapOne[o1: Obstacle, o2: Obstacle, g: Goal, c: Charger] {
 	Expected Path: (x0, y0), (x0, y1), (x0, y2), (x0, y3), (x0, y4), (x1, y4), (x2, y4), (x2, y3), (x2, y2), (x3, y2), (x4, y2), (x4, y3), (x4, y4)
 	Note* map only looks visually appealing in the Alloy text editor
 
-	y4  Goal - - - - - - - - - - - - +			     Goal
+	y4  Goal - - - - - - - - - - - - +	   Obstacle     Goal
 		 |				  |				 ^
 		 |				  |				 |
 	y3	 |          Obstacle        |        Obstacle        |
@@ -226,22 +213,6 @@ pred SelectMapTwo [o1: Obstacle, o2: Obstacle, o3: Obstacle, g1: Goal, g2: Goal,
 }
 
 
-/* Traverses Rover r along is current path */
-pred TraverseCurrentPath {some r: Rover | TraverseCurrentPath[r]}
-pred TraverseCurrentPath [r: Rover] {
-	// Pre-conditions
-	r.currentPos = r.currentPath.start // r must be at the start of the path
-	r.currentPath.start != r.currentPath.end // the path must be require at least one step
-
-
-}
-
-/* Updates Rover r's current path to the shortest path to reach all of its goals without running out of charge */
-pred ComputePlan {some r: Rover | ComputePlan[r]}
-pred ComputePlan [r: Rover] {
-	
-}
-
 /* True if two positions are adjacent */
 pred adj[p: Position -> Position] {
 	all a, b: Position | a->b in p implies (
@@ -267,14 +238,8 @@ fun y[m: MapObject]: one YCoord {
 }
 
 pred show {
-	// Step 1: Initialize Rover and the Map
-		InitRover and SelectMapOne //and
-
-	// Step 2: Calcuate Current Path
-		//after (eventually (ComputePlan and
-
-	// Step 3: Traverse Current Path
-	//	after (eventually TraverseCurrentPath)))
+	InitRover			// Initialize the Rover
+	SelectMapOne 	// Select the map
 }
 run show for 8
 

@@ -23,12 +23,9 @@
    <type name="Charger"/>
    <type name="Goal"/>
    <type name="Int"/>
-   <type name="Map"/>
    <type name="MapObject"/>
    <type name="Obstacle"/>
-   <type name="Path"/>
    <type name="Position"/>
-   <type name="Rover"/>
    <type name="String"/>
    <type name="univ"/>
    <type name="x0"/>
@@ -57,21 +54,32 @@
    <type name="open$4/Ord"/>
    <type name="ordering/Ord"/>
    <type name="seq/Int"/>
-   <set name="$InitRover_pos" type="Position"/>
    <set name="$InitRover_r" type="Rover"/>
-   <set name="$SelectMapTwo_c" type="Charger"/>
-   <set name="$SelectMapTwo_g1" type="Goal"/>
-   <set name="$SelectMapTwo_g2" type="Goal"/>
-   <set name="$SelectMapTwo_o1" type="Obstacle"/>
-   <set name="$SelectMapTwo_o2" type="Obstacle"/>
-   <set name="$SelectMapTwo_o3" type="Obstacle"/>
-   <set name="$show_r" type="Rover"/>
+   <set name="$SelectMapOne_c" type="Charger"/>
+   <set name="$SelectMapOne_g" type="Goal"/>
+   <set name="$SelectMapOne_o1" type="Obstacle"/>
+   <set name="$SelectMapOne_o2" type="Obstacle"/>
+</node>
+
+<node color="Green">
+   <type name="Rover"/>
 </node>
 
 <node hideunconnected="yes">
    <type name="ChargeLevel"/>
+</node>
+
+<node hideunconnected="yes" color="Blue">
    <type name="XCoord"/>
+</node>
+
+<node hideunconnected="yes" color="Red">
    <type name="YCoord"/>
+</node>
+
+<node visible="no">
+   <type name="Map"/>
+   <type name="Path"/>
 </node>
 
 <edge visible="no">
