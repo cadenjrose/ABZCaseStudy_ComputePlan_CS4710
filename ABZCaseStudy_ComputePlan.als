@@ -123,13 +123,13 @@ pred ValidPathStructure[p: Path] {
 	adj[p.nextPos]
 
 	// The path never goes out of bounds
-	all pos: p.positions | (pos.x not in nexts[ActiveMap.rightEdge]) and (pos.y not in nexts[ActiveMap.topEdge])
+	all pos: p.positions | lte[pos.x, ActiveMap.rightEdge] and lte[pos.y, ActiveMap.topEdge]
 
 	// There are never any obstacles inside of a Rover's current path
 	no (ActiveMap.obstacles.location & Rover.currentPath.positions)
 
 	// There is only ever one path, the current path
-	Path = Rover.currentPath
+	#Path = 1
 
 	// Every goal must be in the path
 	ActiveMap.goals.location in p.positions
@@ -213,14 +213,13 @@ pred SelectMapTwo [o1: Obstacle, o2: Obstacle, o3: Obstacle, g1: Goal, g2: Goal,
 }
 
 
-/* True if two positions are adjacent */
+/* Are two positions adjacent to each other? */
 pred adj[p: Position -> Position] {
 	all a, b: Position | a->b in p implies (
-		(a.x = next[b.x] or a.x = prev[b.x]) and (a.y = b.y) or
-    		(a.y = next[b.y] or a.y = prev[b.y]) and (a.x = b.x)
+		((a.x = next[b.x] or a.x = prev[b.x]) and (a.y = b.y)) or
+    		((a.y = next[b.y] or a.y = prev[b.y]) and (a.x = b.x))
   	)
 }
-
 
 
 // -------------- Functions --------------//
@@ -239,8 +238,8 @@ fun y[m: MapObject]: one YCoord {
 
 pred show {
 	InitRover			// Initialize the Rover
-	SelectMapOne 	// Select the map
+	SelectMapTwo 	// Select the map
 }
-run show for 8
+run show for 16
 
 
