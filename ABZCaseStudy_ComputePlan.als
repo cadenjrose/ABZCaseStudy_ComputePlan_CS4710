@@ -150,6 +150,7 @@ pred ValidPathStructure[p: Path] {
 
 // -------- Temporal Predicates-------//
 
+/*
 pred RandomObstacleAppears{some o: Obstacle | RandomObstacleAppears[o]}
 pred RandomObstacleAppears[o: Obstacle] {
 	-- Pre-conditions
@@ -172,6 +173,28 @@ pred RandomObstacleAppears[o: Obstacle] {
 		charge' = charge
 		currentPath' = currentPath
 }
+*/
+
+pred TakeStep {some r: Rover | TakeStep[r]}
+pred TakeStep[r: Rover] {
+	-- There is no obstacle in the next position
+	no r.nextStep & ActiveMap.obstacles.location
+
+	(one c: ActiveMap.chargers | c.location = r.nextStep) implies (r.charge' = c10)
+	(no c: ActiveMap.chargers | c.location = r.nextStep) implies (r.charge' = prev[r.charge])	
+
+	(one g: ActiveMap.goals | g.location = r.nextStep) implies (one g: ActiveMap.goals | visited' = visited + g)
+	(no g: ActiveMap.goals | g.location = r.nextStep) implies (visited' = visited)
+
+	-- Current Pos
+	r.currentPos' = r.nextStep
+	r.currentPath' = r.currentPath
+	ActiveMap.obstacles' = ActiveMap.obstacles
+}
+
+pred CalculateNewPath[r: Rover] {
+	
+}
 
 // ------------------ Maps -----------------//
 
@@ -180,7 +203,7 @@ pred RandomObstacleAppears[o: Obstacle] {
 	Expected Path: (x0, y0), (x0, y1), (x0, y2), (x1, y2), (x2, y2)
 	Note* map only looks visually appealing in the Alloy text editor
 
-	y2     + - - - - - - - - - - - ->Goal
+	y2 Charger - - - - - - - - - ->Goal
 		 |
 		 |
 	y1	 |	   Obstacle
@@ -242,7 +265,7 @@ pred SelectMapTwo [o1: Obstacle, o2: Obstacle, o3: Obstacle, g1: Goal, g2: Goal,
 	
 	// Goals
 	g1.x = x0 and g1.y = y4
-	g2.x = x4 and g2.y = y4
+	g2.x = x4 and g2.y = y4s
 	ActiveMap.goals = g1 + g2
 
 	// Chargers
@@ -268,6 +291,10 @@ fun x[m: MapObject]: one XCoord {
 	m.location.x
 }
 
+fun nextStep[r: Rover]: Position {
+	 r.currentPos.(r.currentPath.nextPos)
+}
+
 
 // Returns the y coordinate of the map object
 fun y[m: MapObject]: one YCoord {
@@ -276,7 +303,8 @@ fun y[m: MapObject]: one YCoord {
 
 pred show {
 	InitRover			// Initialize the Rover
-	SelectMapTwo 	// Select the map
+	SelectMapOne 	// Select the map
+	always (visited != ActiveMap.goals implies TakeStep)
 	--eventually RandomObstacleAppears
 }
 run show for 16
