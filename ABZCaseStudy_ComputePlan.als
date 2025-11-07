@@ -19,7 +19,7 @@ open util/ordering[ChargeLevel] // orders the charge levels
 
 // pseudo integers
 enum XCoord {x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10} // can expand later
-enum YCoord {y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10}  // can expand later 
+enum YCoord {y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10}  // can expand later
 enum ChargeLevel {c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10} // can expand later
 
 
@@ -38,6 +38,7 @@ sig MapObject {
 }
 
 sig Goal extends MapObject {}		// The Goal Objects
+var sig visited in Goal {}
 sig Charger extends MapObject {}  	// The Charger Objects
 sig Obstacle extends MapObject {}       // The Obstacle Objects
 
@@ -58,7 +59,7 @@ sig Rover {
 
 // A map object the rover can traverse
 sig Map {
-	obstacles: set Obstacle,	// The set of obstacles
+	var obstacles: set Obstacle,	// The set of obstacles
 	chargers: set Charger,	// The set of chargers
 	goals: set Goal,		// The set of goals
 	topEdge: one YCoord,   // The maximum traversable y value
@@ -72,13 +73,16 @@ one sig ActiveMap extends Map {} // The Map the Rover is activly traversing
 
 fact {
 	 // Every path has a valid structure
-	always ValidPathStructure
+	ValidPathStructure
 
 	// No positions have the same x and y values
 	all disj p1, p2: Position | p1.x != p2.x or p1.y != p2.y
 
-	// There are never any extra map objects other than the ones defined by each map
-	always no m: MapObject | m not in ActiveMap.(obstacles + goals + chargers)
+	// There are no extra map objects other than the ones defined by each map
+	no m: MapObject | m not in ActiveMap.(obstacles + goals + chargers)
+
+	// The rovers charge is greater than c0
+	always gt[Rover.charge, c0]
 
 	// The active map is the only map
 	Map = ActiveMap
@@ -133,6 +137,11 @@ pred ValidPathStructure[p: Path] {
 
 	// Every goal must be in the path
 	ActiveMap.goals.location in p.positions
+
+	// There is no subpath from (ActiveMap.goals.location + Rover.currentPos) to another goal
+	// such that the path is longer than #nexts[Rover.charge] and does not contain a charger location
+
+	// no g1: (ActiveMap.goals.location + Rover.currentPos), g2: ^(Path.nextPos) & ActiveMap.g1-> | g1->g2 in ^(Path.nextPos)
 }
 
 // ------------------ Maps -----------------//
