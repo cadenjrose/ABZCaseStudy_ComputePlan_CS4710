@@ -85,7 +85,7 @@ fact {
 	always gt[Rover.charge, c0]
 
 	// The active map is the only map
-	Map = ActiveMap
+	always Map = ActiveMap
 }
 
 
@@ -134,6 +134,9 @@ pred ValidPathStructure[p: Path] {
 
 	// There is only ever one path, the current path
 	#Path = 1
+	
+	// There are no visited goals at the start
+	no visited
 
 	// Every goal must be in the path
 	ActiveMap.goals.location in p.positions
@@ -142,6 +145,32 @@ pred ValidPathStructure[p: Path] {
 	// such that the path is longer than #nexts[Rover.charge] and does not contain a charger location
 
 	// no g1: (ActiveMap.goals.location + Rover.currentPos), g2: ^(Path.nextPos) & ActiveMap.g1-> | g1->g2 in ^(Path.nextPos)
+}
+
+
+// -------- Temporal Predicates-------//
+
+pred RandomObstacleAppears{some o: Obstacle | RandomObstacleAppears[o]}
+pred RandomObstacleAppears[o: Obstacle] {
+	-- Pre-conditions
+		// The obstacle does not already exist
+		o not in ActiveMap.obstacles
+	
+		// The obstacle does not share a location to any map object
+		no o.location & ActiveMap.(goals+chargers+obstacles).location
+	
+		// The obstacle is in-bounds
+		lte[o.location.x, ActiveMap.rightEdge]
+		lte[o.location.y, ActiveMap.topEdge]
+
+	-- Post-conditions (changed)
+		ActiveMap.obstacles' = ActiveMap.obstacles + o
+
+	-- Post-conditions (unchanged)
+		visited' = visited
+		currentPos' = currentPos
+		charge' = charge
+		currentPath' = currentPath
 }
 
 // ------------------ Maps -----------------//
@@ -248,6 +277,7 @@ fun y[m: MapObject]: one YCoord {
 pred show {
 	InitRover			// Initialize the Rover
 	SelectMapTwo 	// Select the map
+	--eventually RandomObstacleAppears
 }
 run show for 16
 
