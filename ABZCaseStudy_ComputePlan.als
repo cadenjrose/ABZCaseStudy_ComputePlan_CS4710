@@ -150,7 +150,7 @@ pred ValidPathStructure[p: Path] {
 
 // -------- Temporal Predicates-------//
 
-/*
+
 pred RandomObstacleAppears{some o: Obstacle | RandomObstacleAppears[o]}
 pred RandomObstacleAppears[o: Obstacle] {
 	-- Pre-conditions
@@ -169,11 +169,17 @@ pred RandomObstacleAppears[o: Obstacle] {
 
 	-- Post-conditions (unchanged)
 		visited' = visited
-		currentPos' = currentPos
-		charge' = charge
-		currentPath' = currentPath
+		all r: Rover | {
+		r.currentPos' = r.currentPos
+		r.charge' = r.charge
+		r.currentPath' = r.currentPath
+		}
+
+		ActiveMap.chargers' = ActiveMap.chargers
+		ActiveMap.goals' = ActiveMap.goals
+	
 }
-*/
+
 
 pred TakeStep {some r: Rover | TakeStep[r]}
 pred TakeStep[r: Rover] {
@@ -305,8 +311,7 @@ pred show {
 	InitRover			// Initialize the Rover
 	SelectMapOne 	// Select the map
 	always (visited != ActiveMap.goals implies TakeStep)
-	--eventually RandomObstacleAppears
+	eventually RandomObstacleAppears
 }
 run show for 16
-
 
