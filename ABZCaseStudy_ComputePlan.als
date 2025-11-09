@@ -103,6 +103,9 @@ pred InitRover {
 
 	// There is only ever 1 rover
 	always #Rover = 1
+
+	// The rover never runs out of battery (maybe it can)
+	--always gt[Rover.charge, c0]
 }
 
 /* Is the path structure valid? */
@@ -129,7 +132,7 @@ pred ValidPathStructure[p: Path] {
 	// The path never goes out of bounds
 	all pos: p.positions | lte[pos.x, ActiveMap.rightEdge] and lte[pos.y, ActiveMap.topEdge]
 
-	// There are never any obstacles inside of a Rover's current path
+	// There are no obstacles inside of a Rover's current path
 	no (ActiveMap.obstacles.location & Rover.currentPath.positions)
 
 	// There is only ever one path, the current path
@@ -157,8 +160,8 @@ pred RandomObstacleAppears[o: Obstacle] {
 		// The obstacle does not already exist
 		o not in ActiveMap.obstacles
 	
-		// The obstacle does not share a location to any map object
-		no o.location & ActiveMap.(goals+chargers+obstacles).location
+		// The obstacle does not share a location to any map object or the rover
+		no o.location & (ActiveMap.(goals+chargers+obstacles).location + Rover.currentPos)
 	
 		// The obstacle is in-bounds
 		lte[o.location.x, ActiveMap.rightEdge]
@@ -169,31 +172,31 @@ pred RandomObstacleAppears[o: Obstacle] {
 
 	-- Post-conditions (unchanged)
 		visited' = visited
-		all r: Rover | {
-		r.currentPos' = r.currentPos
-		r.charge' = r.charge
-		r.currentPath' = r.currentPath
-		}
-
-		ActiveMap.chargers' = ActiveMap.chargers
-		ActiveMap.goals' = ActiveMap.goals
-	
+		currentPos' = currentPos
+		charge' = charge
+		currentPath' = currentPath
 }
+
 
 
 pred TakeStep {some r: Rover | TakeStep[r]}
 pred TakeStep[r: Rover] {
 	-- There is no obstacle in the next position
 	no r.nextStep & ActiveMap.obstacles.location
+	-- The rover must have at least 1 charge to take a step
+	gt[r.charge, c0]
 
+	-- A charger in the next step means that charge is reset in the next step
 	(one c: ActiveMap.chargers | c.location = r.nextStep) implies (r.charge' = c10)
+	-- Otherwise, the charge is decremented
 	(no c: ActiveMap.chargers | c.location = r.nextStep) implies (r.charge' = prev[r.charge])	
 
 	(one g: ActiveMap.goals | g.location = r.nextStep) implies (one g: ActiveMap.goals | visited' = visited + g)
 	(no g: ActiveMap.goals | g.location = r.nextStep) implies (visited' = visited)
 
-	-- Current Pos
+	-- CurrentPos is the next step location
 	r.currentPos' = r.nextStep
+
 	r.currentPath' = r.currentPath
 	ActiveMap.obstacles' = ActiveMap.obstacles
 }
@@ -279,12 +282,20 @@ pred SelectMapTwo [o1: Obstacle, o2: Obstacle, o3: Obstacle, g1: Goal, g2: Goal,
 	ActiveMap.chargers = c
 }
 
-pred DoNothing [] {
+/* Does nothing happen? */
+pred DoNothing {
 	visited' = visited
 	currentPos' = currentPos
 	currentPath' = currentPath
 	obstacles' = obstacles
 	charge' = charge
+}
+
+/* Does the rover launch? */
+pred LaunchRover {
+	InitRover -- Initialize Rover
+	always (visited != ActiveMap.goals implies TakeStep) -- Take steps until all goals have been reached
+	eventually always DoNothing -- Eventually do nothing forever
 }
 
 
@@ -305,26 +316,34 @@ fun x[m: MapObject]: one XCoord {
 	m.location.x
 }
 
-fun nextStep[r: Rover]: Position {
-	 r.currentPos.(r.currentPath.nextPos)
-}
-
-
 // Returns the y coordinate of the map object
 fun y[m: MapObject]: one YCoord {
 	m.location.y
 }
 
-pred show {
-	InitRover			// Initialize the Rover
-	SelectMapTwo 	// Select the map
-	always (visited != ActiveMap.goals implies TakeStep)
-<<<<<<< HEAD
-	eventually always DoNothing
-	--eventually RandomObstacleAppears
-=======
-	eventually RandomObstacleAppears
->>>>>>> 84ecb3b071f2aabf96f146c10756c35fe15df140
+// Returns the position the rover will traverse to next
+fun nextStep[r: Rover]: Position {
+	 r.currentPos.(r.currentPath.nextPos)
 }
-run show for 16 Position, 1 Rover, 1 Path, 1 Map, 6 MapObject, 15 steps
+
+
+// -------- Run-able Predacates ------//
+
+
+/* Launch Rover in MapOne */
+pred ComputePlan_MapOne {
+	 -- Requires 1024 MB of memory --
+	SelectMapOne
+	LaunchRover
+	--eventually RandomObstacleAppears
+}
+--run ComputePlan_MapOne for 16
+
+/* Launch Rover in MapTwo */
+pred ComputePlan_MapTwo {
+	 -- Requires 1536 MB of memory --
+	SelectMapTwo
+	LaunchRover
+}
+run ComputePlan_MapTwo for 25 Position, 1 Rover, 1 Path, 1 Map, 25 MapObject, 20 steps
 
