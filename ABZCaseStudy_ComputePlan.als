@@ -265,12 +265,20 @@ pred SelectMapTwo [o1: Obstacle, o2: Obstacle, o3: Obstacle, g1: Goal, g2: Goal,
 	
 	// Goals
 	g1.x = x0 and g1.y = y4
-	g2.x = x4 and g2.y = y4s
+	g2.x = x4 and g2.y = y4
 	ActiveMap.goals = g1 + g2
 
 	// Chargers
 	c.x = x2 and c.y = y2
 	ActiveMap.chargers = c
+}
+
+pred DoNothing [] {
+	visited' = visited
+	currentPos' = currentPos
+	currentPath' = currentPath
+	obstacles' = obstacles
+	charge' = charge
 }
 
 
@@ -303,10 +311,11 @@ fun y[m: MapObject]: one YCoord {
 
 pred show {
 	InitRover			// Initialize the Rover
-	SelectMapOne 	// Select the map
+	SelectMapTwo 	// Select the map
 	always (visited != ActiveMap.goals implies TakeStep)
+	eventually always DoNothing
 	--eventually RandomObstacleAppears
 }
-run show for 16
+run show for 16 Position, 1 Rover, 1 Path, 1 Map, 6 MapObject, 15 steps
 
 
