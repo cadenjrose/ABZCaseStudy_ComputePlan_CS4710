@@ -265,7 +265,7 @@ pred SelectMapTwo [o1: Obstacle, o2: Obstacle, o3: Obstacle, g1: Goal, g2: Goal,
 	
 	// Goals
 	g1.x = x0 and g1.y = y4
-	g2.x = x4 and g2.y = y4s
+	g2.x = x4 and g2.y = y4
 	ActiveMap.goals = g1 + g2
 
 	// Chargers
