@@ -153,7 +153,7 @@ pred ValidPathStructure[p: Path] {
 
 // -------- Temporal Predicates-------//
 
-
+/*
 pred RandomObstacleAppears{some o: Obstacle | RandomObstacleAppears[o]}
 pred RandomObstacleAppears[o: Obstacle] {
 	-- Pre-conditions
@@ -176,6 +176,7 @@ pred RandomObstacleAppears[o: Obstacle] {
 		charge' = charge
 		currentPath' = currentPath
 }
+*/
 
 
 
@@ -335,9 +336,8 @@ pred ComputePlan_MapOne {
 	 -- Requires 1024 MB of memory --
 	SelectMapOne
 	LaunchRover
-	--eventually RandomObstacleAppears
 }
---run ComputePlan_MapOne for 16
+--run ComputePlan_MapOne for 9 Position, 1 Rover, 1 Path, 1 Map, 9 MapObject, 10 steps
 
 /* Launch Rover in MapTwo */
 pred ComputePlan_MapTwo {
@@ -345,5 +345,5 @@ pred ComputePlan_MapTwo {
 	SelectMapTwo
 	LaunchRover
 }
-run ComputePlan_MapTwo for 25 Position, 1 Rover, 1 Path, 1 Map, 25 MapObject, 20 steps
+run ComputePlan_MapTwo for 16 Position, 1 Rover, 1 Path, 1 Map, 6 MapObject, 20 steps
 

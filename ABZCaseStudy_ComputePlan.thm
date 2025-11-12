@@ -23,9 +23,7 @@
    <type name="Charger"/>
    <type name="Goal"/>
    <type name="Int"/>
-   <type name="MapObject"/>
    <type name="Obstacle"/>
-   <type name="Position"/>
    <type name="String"/>
    <type name="univ"/>
    <type name="x0"/>
@@ -54,7 +52,9 @@
    <type name="open$4/Ord"/>
    <type name="ordering/Ord"/>
    <type name="seq/Int"/>
+   <set name="this/visited" type="Goal"/>
    <set name="$InitRover_r" type="Rover"/>
+   <set name="$RandomObstacleAppears_o" type="Obstacle"/>
    <set name="$SelectMapOne_c" type="Charger"/>
    <set name="$SelectMapOne_g" type="Goal"/>
    <set name="$SelectMapOne_o1" type="Obstacle"/>
@@ -67,6 +67,8 @@
 
 <node hideunconnected="yes">
    <type name="ChargeLevel"/>
+   <type name="MapObject"/>
+   <type name="Position"/>
 </node>
 
 <node hideunconnected="yes" color="Blue">
@@ -80,12 +82,15 @@
 <node visible="no">
    <type name="Map"/>
    <type name="Path"/>
+   <set name="$RandomObstacleAppears_p" type="Position"/>
 </node>
 
 <edge visible="no">
    <relation name="positions"> <type name="Path"/> <type name="Position"/> </relation>
    <relation name="rightEdge"> <type name="Map"/> <type name="XCoord"/> </relation>
    <relation name="topEdge"> <type name="Map"/> <type name="YCoord"/> </relation>
+   <relation name="x"> <type name="Position"/> <type name="XCoord"/> </relation>
+   <relation name="y"> <type name="Position"/> <type name="YCoord"/> </relation>
 </edge>
 
 </view>
