@@ -59,7 +59,7 @@ sig Rover {
 
 // A map object the rover can traverse
 sig Map {
-	var obstacles: set Obstacle,	// The set of obstacles
+	obstacles: set Obstacle,	// The set of obstacles (switch to var when doing dynamic map)
 	chargers: set Charger,	// The set of chargers
 	goals: set Goal,		// The set of goals
 	topEdge: one YCoord,   // The maximum traversable y value
@@ -104,6 +104,8 @@ pred InitRover {
 	// There is only ever 1 rover
 	always #Rover = 1
 
+	
+
 	// The rover never runs out of battery (maybe it can)
 	--always gt[Rover.charge, c0]
 }
@@ -143,16 +145,12 @@ pred ValidPathStructure[p: Path] {
 
 	// Every goal must be in the path
 	ActiveMap.goals.location in p.positions
-
-	// There is no subpath from (ActiveMap.goals.location + Rover.currentPos) to another goal
-	// such that the path is longer than #nexts[Rover.charge] and does not contain a charger location
-
-	// no g1: (ActiveMap.goals.location + Rover.currentPos), g2: ^(Path.nextPos) & ActiveMap.g1-> | g1->g2 in ^(Path.nextPos)
 }
 
 
 // -------- Temporal Predicates-------//
 
+-- Tried this but couldn't get to work
 /*
 pred RandomObstacleAppears{some o: Obstacle | RandomObstacleAppears[o]}
 pred RandomObstacleAppears[o: Obstacle] {
@@ -198,12 +196,9 @@ pred TakeStep[r: Rover] {
 	-- CurrentPos is the next step location
 	r.currentPos' = r.nextStep
 
+	-- Unchanged
 	r.currentPath' = r.currentPath
-	ActiveMap.obstacles' = ActiveMap.obstacles
-}
-
-pred CalculateNewPath[r: Rover] {
-	
+	--ActiveMap.obstacles' = ActiveMap.obstacles
 }
 
 // ------------------ Maps -----------------//
@@ -288,7 +283,7 @@ pred DoNothing {
 	visited' = visited
 	currentPos' = currentPos
 	currentPath' = currentPath
-	obstacles' = obstacles
+	--obstacles' = obstacles
 	charge' = charge
 }
 
@@ -306,6 +301,12 @@ pred adj[p: Position -> Position] {
 		((a.x = next[b.x] or a.x = prev[b.x]) and (a.y = b.y)) or
     		((a.y = next[b.y] or a.y = prev[b.y]) and (a.x = b.x))
   	)
+}
+
+/* Is a Plan/Scenario Chosen? */
+pred ChooseScenario {
+	ComputePlan_MapOne or
+	ComputePlan_MapTwo
 }
 
 
@@ -327,9 +328,47 @@ fun nextStep[r: Rover]: Position {
 	 r.currentPos.(r.currentPath.nextPos)
 }
 
+// --------------- Assertions -------------//
 
-// -------- Run-able Predacates ------//
+// There are no cycles in the path other than the end position
+assert NoPathCycles {
+	all p: Path |
+		all pos: p.positions - p.end |
+			always one pos.(p.nextPos)
+}
+--check NoPathCycles for 12 but 1 Path, 1 Rover, 1 Map
 
+// The beginning and ending positions are unique and correct
+assert ValidStartEndPoints {
+	all p: Path | (
+		always (
+			one p.start and one p.end and
+			no p.start.~(p.nextPos) and
+			no p.end.(p.nextPos)
+		)
+	)
+}
+--check ValidStartEndPoints for 12 but 1 Path
+
+// Rover can only move if it has charge
+assert NoMoveOnZeroCharge {
+	all r: Rover |
+		always (lte[r.charge, c0] implies r.currentPos' = r.currentPos)
+}
+--check NoMoveOnZeroCharge for 10 steps
+
+// Rover always stays in bounds
+assert RoverStaysInBounds {
+	ChooseScenario implies (
+		always (
+			lte[Rover.currentPos.x, ActiveMap.rightEdge] and
+			lte[Rover.currentPos.y, ActiveMap.topEdge]
+		)   
+	)
+}
+--check RoverStaysInBounds for 10 steps
+
+// --------- Run-able Scenarios  -------//
 
 /* Launch Rover in MapOne */
 pred ComputePlan_MapOne {

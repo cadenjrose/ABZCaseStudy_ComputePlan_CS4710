@@ -54,7 +54,6 @@
    <type name="seq/Int"/>
    <set name="this/visited" type="Goal"/>
    <set name="$InitRover_r" type="Rover"/>
-   <set name="$RandomObstacleAppears_o" type="Obstacle"/>
    <set name="$SelectMapOne_c" type="Charger"/>
    <set name="$SelectMapOne_g" type="Goal"/>
    <set name="$SelectMapOne_o1" type="Obstacle"/>
@@ -71,26 +70,32 @@
    <type name="Position"/>
 </node>
 
-<node hideunconnected="yes" color="Blue">
-   <type name="XCoord"/>
-</node>
-
-<node hideunconnected="yes" color="Red">
-   <type name="YCoord"/>
-</node>
-
 <node visible="no">
    <type name="Map"/>
    <type name="Path"/>
-   <set name="$RandomObstacleAppears_p" type="Position"/>
 </node>
+
+<node visible="no" hideunconnected="yes" color="Blue">
+   <type name="XCoord"/>
+</node>
+
+<node visible="no" hideunconnected="yes" color="Red">
+   <type name="YCoord"/>
+</node>
+
+<edge attribute="yes">
+   <relation name="x"> <type name="Position"/> <type name="XCoord"/> </relation>
+   <relation name="y"> <type name="Position"/> <type name="YCoord"/> </relation>
+</edge>
+
+<edge style="inherit">
+   <relation name="currentPos"> <type name="Rover"/> <type name="Position"/> </relation>
+</edge>
 
 <edge visible="no">
    <relation name="positions"> <type name="Path"/> <type name="Position"/> </relation>
    <relation name="rightEdge"> <type name="Map"/> <type name="XCoord"/> </relation>
    <relation name="topEdge"> <type name="Map"/> <type name="YCoord"/> </relation>
-   <relation name="x"> <type name="Position"/> <type name="XCoord"/> </relation>
-   <relation name="y"> <type name="Position"/> <type name="YCoord"/> </relation>
 </edge>
 
 </view>
